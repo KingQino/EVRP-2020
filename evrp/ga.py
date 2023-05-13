@@ -416,8 +416,8 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         fits = []
         mean = 0
         std  = 0.0
-        min_fit = 999999999
-        max_fit = 0
+        min_fit = None
+        max_fit = None
 
         if size == 0:
             print('  No candidates')
@@ -437,8 +437,11 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         print(f'  Avg {mean}')   # Reflect the direction of population evolution 
         print(f'  Std {std}')
         
-        min_individual, min_fitness = CANDIDATES[0]
-        print(f'  Best fitness: {min_fitness}')
+        min_individual = [] 
+        min_fitness = None
+        if size != 0:
+            min_individual, min_fitness = CANDIDATES[0]
+        print(f'  Best fitness: {min_fit}')
         best_solution = min_individual
         best_cost = min_fitness
         # Write data to holders for exporting results to CSV file
@@ -446,8 +449,8 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
             csv_row = {
                 'generation': gen,
                 'evaluated_individuals': stats_num_candidates_added,
-                'min_fitness': min(fits),
-                'max_fitness': max(fits),
+                'min_fitness': min_fit,
+                'max_fitness': max_fit,
                 'avg_fitness': mean,
                 'std_fitness': std,
             }
