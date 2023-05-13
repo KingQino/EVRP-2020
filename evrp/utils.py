@@ -284,6 +284,8 @@ def plot_training_graph(df, title, is_save=False, save_path='./results/instance/
     # Plot the line graph for min_fitness
     plt.plot(df['generation'], df['min_fitness'], label='Minimum Fitness')
 
+    plt.plot(df['generation'], df['max_fitness'], label='Maximum Fitness')
+
     # Set the labels for the X and Y axes
     plt.xlabel('Generation')
     plt.ylabel('Fitness')

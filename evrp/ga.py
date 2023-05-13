@@ -413,12 +413,27 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
 
         # Statistical Data
         size = len(CANDIDATES)
-        fits = [fit for ind, fit in CANDIDATES]
-        mean = sum(fits) / size
-        std  = (sum([(x - mean)**2 for x in fits]) / size - 1 ) ** 0.5
+        fits = []
+        mean = 0
+        std  = 0.0
+        min_fit = 999999999
+        max_fit = 0
+
+        if size == 0:
+            print('  No candidates')
+        else:
+            fits = [fit for ind, fit in CANDIDATES]
+            mean = sum(fits) / size
+            min_fit = min(fits)
+            max_fit = max(fits)
+
+        if size > 1:
+            std = (sum((x - mean) ** 2 for x in fits) / (size - 1)) ** 0.5
+        else:
+            std = 0.0
         print(f'  Candidates Num {size}')
-        print(f'  Min {min(fits)}') # the best result of each generation
-        print(f'  Max {max(fits)}')
+        print(f'  Min {min_fit}') # the best result of each generation
+        print(f'  Max {max_fit}')
         print(f'  Avg {mean}')   # Reflect the direction of population evolution 
         print(f'  Std {std}')
         
