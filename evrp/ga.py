@@ -185,6 +185,8 @@ def simple_repair(initial_route, battery_capacity, energy_consumption, distance_
     """
     route = initial_route.copy()
 
+    if len(route) == 0 or len(route) == 1:
+        return route
     repaired_route = [route.pop(0)]
     current_node = repaired_route[-1]
     next_node = route[0]

@@ -63,4 +63,5 @@ def visualize(training_file):
 
 if __name__ == '__main__':
     main()
+    # visualize("/Users/yhq/Desktop/Code/EVRP-2020/results/E-n22-k4_seed1_nG200.csv")
     
