@@ -399,6 +399,10 @@ def local_search(individual, instance):
     # 2-opt & 3-opt
     optimized_individual = []
     for route in individual:
+        if len(route) <= 1:
+            optimized_individual.append(route)
+            continue
+
         # When the size of the route is relatively small, we can even list all possible sequences, 
         # and then pick up the route with the smallest total distance
         route_01 = two_opt(route, distance_matrix)
