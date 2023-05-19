@@ -15,8 +15,6 @@ DATA_DIR = os.path.join(BASE_DIR, 'evrp-benchmark-set')
 RESULT_DIR = os.path.join(BASE_DIR, 'results')
 
 def main():
-    random.seed(64)
-
     parser = argparse.ArgumentParser(description='argparse testing')
     parser.add_argument('--instance_name','-n',type=str, default = "E-n22-k4.evrp",required=True,help="a instance name")
     parser.add_argument('--seed','-s',type=int, default=1,help='random seed')
@@ -26,7 +24,7 @@ def main():
     parser.add_argument('--cx_prob','-c',type=float, default=0.8,help='the probability of crossover')
     parser.add_argument('--mut_prob','-m',type=float, default=0.5,help='the probability of mutation')
     parser.add_argument('--indpb','-ind',type=float, default=0.2,help='the mutation probability for each element in the sequence')
-    parser.add_argument('--immig_prop','-i',type=float, default=0.2,help='the proportion of immigration in the new population')
+    parser.add_argument('--immig_prop','-i',type=float, default=0.2,help='the proportion of immigrants in the new population')
 
     args = parser.parse_args()
 
@@ -37,6 +35,8 @@ def main():
     cx_prob = args.cx_prob
     mut_prob = args.mut_prob
     indpb = args.indpb
+
+    random.seed(seed)
 
     file_dir = os.path.join(DATA_DIR, instance_name)
 

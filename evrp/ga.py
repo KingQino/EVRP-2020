@@ -155,19 +155,80 @@ def two_opt(route, distance_matrix):
     Returns:
         A list of integers representing the optimized route.
     """
+    _route = [0] + route + [0]
+    
     improved = True
     while improved:
         improved = False
-        for i in range(1, len(route) - 2):
-            for j in range(i + 1, len(route) - 1):
+        for i in range(1, len(_route) - 2):
+            for j in range(i + 1, len(_route) - 1):
                 
                 # Calculate the cost difference between the old route and the new route obtained by swapping edges
-                old_cost = distance_matrix[route[i - 1]][route[i]] + distance_matrix[route[j]][route[j + 1]]
-                new_cost = distance_matrix[route[i - 1]][route[j]] + distance_matrix[route[i]][route[j + 1]]
+                old_cost = distance_matrix[_route[i - 1]][_route[i]] + distance_matrix[_route[j]][_route[j + 1]]
+                new_cost = distance_matrix[_route[i - 1]][_route[j]] + distance_matrix[_route[i]][_route[j + 1]]
                 if new_cost < old_cost:
-                    route[i:j + 1] = reversed(route[i:j + 1])
+                    _route[i:j + 1] = reversed(_route[i:j + 1])
                     improved = True
-    return route
+    
+    # Remove depots from the endpoints
+    _route = _route[1:-1]
+    return _route
+
+def calculate_total_distance(route, distance_matrix):
+    """Calculate the total distance of a route based on the global distance matrix."""
+    total_distance = 0
+    extended_route = route
+    if route[0] != 0 or route[-1] != 0:
+        extended_route = [0] + route + [0]
+    for i in range(len(extended_route) - 1):
+        total_distance += distance_matrix[extended_route[i]][extended_route[i + 1]]
+    return total_distance
+
+def three_opt(route, distance_matrix):
+    """
+    Perform 3-opt local search on a given route to minimize its total distance.
+    
+    Args:
+        route: A list of integers representing the route in sequence, excluding the depot (0).
+        distance_matrix: A 2D list or numpy array containing the distances between nodes.
+
+    
+    Returns:
+        A list of integers representing the optimized route, excluding the depot (0).
+    """
+    # Add the depots at the endpoints
+    route_with_depot = [0] + route + [0]
+
+    best_route = route_with_depot
+    best_distance = calculate_total_distance(route_with_depot, distance_matrix)
+    
+    # Keep searching for improvements until no further improvements can be made
+    improvements = True
+    while improvements:
+        improvements = False
+        for i in range(1, len(route_with_depot) - 2):  # Skip the first depot
+            for j in range(i + 1, len(route_with_depot) - 1):
+                for k in range(j + 1, len(route_with_depot)):  # Up to the last depot
+                    # If nodes are consecutive in the route, skip to next iteration
+                    if k - j == 1:  
+                        continue
+                    # Create a new route by reversing segments of the old route
+                    new_route = route_with_depot[:i]
+                    new_route.extend(reversed(route_with_depot[i:j]))
+                    new_route.extend(reversed(route_with_depot[j:k]))
+                    new_route.extend(route_with_depot[k:])
+                    # Calculate the total distance of the new route
+                    new_distance = calculate_total_distance(new_route, distance_matrix)
+                    # If the new route is better than the best found so far, update the best route
+                    if new_distance < best_distance:
+                        best_distance = new_distance
+                        best_route = new_route
+                        improvements = True
+
+    # Remove the depots at the endpoints
+    best_route = best_route[1:-1]
+    return best_route
+
 
 def simple_repair(initial_route, battery_capacity, energy_consumption, distance_matrix, station_list):
     """
@@ -335,12 +396,28 @@ def local_search(individual, instance):
     distance_matrix = instance.distance_matrix
     station_list = instance.station_list
 
-    # 2-opt
+    # 2-opt & 3-opt
     optimized_individual = []
     for route in individual:
-        extended_route = [0] + route + [0]
-        improved_route = two_opt(extended_route, distance_matrix)
-        optimized_individual.append(improved_route[1:-1])
+        # When the size of the route is relatively small, we can even list all possible sequences, 
+        # and then pick up the route with the smallest total distance
+        route_01 = two_opt(route, distance_matrix)
+        route_02 = three_opt(route, distance_matrix)
+        route_03 = three_opt(route_01, distance_matrix)
+        route_04 = two_opt(route_02, distance_matrix)
+        
+        shuffled_route = route[:]
+        random.shuffle(shuffled_route)
+        
+        route_05 = two_opt(shuffled_route, distance_matrix)
+        route_06 = three_opt(shuffled_route, distance_matrix)
+        route_07 = three_opt(route_05, distance_matrix)
+        route_08 = two_opt(route_06, distance_matrix)
+        
+
+        route_candidates = [route_03, route_04, route_07, route_08]
+        best_route = min(route_candidates, key=lambda x: calculate_total_distance(x, distance_matrix))
+        optimized_individual.append(best_route)
 
     # simple repair (ZGA)
     original_individual = optimized_individual
@@ -357,7 +434,6 @@ def local_search(individual, instance):
     return (improved_individual, cost)
     
 def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir, is_export_csv=True):
-    
     random.seed(seed)
     
     CANDIDATES = []
