@@ -451,6 +451,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
     
     csv_data = []
     
+    start_time = time.process_time()
     # population initialization
     pop = []
     init_pop_randomly = [generate_individual_randomly(num_vehicles, num_customers) for _ in range(int(pop_size * 0.8))]
@@ -535,6 +536,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
                 'max_fitness': max_fit,
                 'avg_fitness': mean,
                 'std_fitness': std,
+                'duration': elapsed_time(start_time),
             }
             csv_data.append(csv_row)
     
@@ -564,6 +566,9 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         pop.extend(individuals_from_immigration)
 
     print('------------End of (successful) evolution------------', end='\n\n') 
+    duration = elapsed_time(start_time)
+    print(f'The Total Evolutionary Duration: {duration} for {n_gen} generations')
+    print(f'The average evolutionary time for each generation is: {duration/n_gen}')
 
     csv_file = ''
     if is_export_csv:
@@ -580,6 +585,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
                     'max_fitness',
                     'avg_fitness',
                     'std_fitness',
+                    'duration'
                 ]
                 writer = DictWriter(file_object, fieldnames=fieldnames, dialect='excel')
                 writer.writeheader()

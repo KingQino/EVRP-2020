@@ -11,8 +11,9 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "-n", "E-n30-k3.evrp",
-                "-g", "10"
+                "-n", "X-n143-k7.evrp",
+                "-g", "5",
+                "-ps", "1000"
             ],
             "justMyCode": true
         }

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import time
 import pandas as pd
 
 
@@ -414,3 +415,21 @@ def exist(path, overwrite=False, display_info=False):
     if display_info:
         print(f'{guess_path_type(path)}: {path} does not exist.')
     return False
+
+
+# ************************************************************************
+# ***************************** Statistics *******************************
+
+def elapsed_time(start):
+    """
+    Calculate the elapsed time since the 'start' timestamp.
+
+    Args:
+        start: A float representing the start time, typically obtained
+            by calling time.process_time() before the operation to be timed.
+
+    Returns:
+        A float representing the elapsed time in seconds.
+    """
+    return time.process_time() - start
+

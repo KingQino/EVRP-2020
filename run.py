@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import random
 import argparse
 
 
@@ -36,10 +35,8 @@ def main():
     mut_prob = args.mut_prob
     indpb = args.indpb
 
-    random.seed(seed)
 
     file_dir = os.path.join(DATA_DIR, instance_name)
-
     instance = EvrpInstance(file_dir)
 
     best_solution, best_cost, training_file = run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, RESULT_DIR)
