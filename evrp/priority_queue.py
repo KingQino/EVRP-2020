@@ -31,7 +31,7 @@ class PriorityQueue:
     
     def random_elements(self, num_elements):
         if self.is_empty():
-            raise IndexError('Random from empty PriorityQueue')
+            return []
         if num_elements > len(self._queue):
             num_elements = len(self._queue)
         random_indices = random.sample(range(len(self._queue)), num_elements)
