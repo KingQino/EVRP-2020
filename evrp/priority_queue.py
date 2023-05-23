@@ -23,7 +23,7 @@ class PriorityQueue:
 
     def peek(self, k):
         if self.is_empty():
-            raise IndexError('Peek from empty PriorityQueue')
+            return []
         return heapq.nsmallest(k, self._queue)
 
     def size(self):

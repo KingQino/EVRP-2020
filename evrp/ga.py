@@ -654,7 +654,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
 
     csv_file = ''
     if is_export_csv:
-        csv_file_name = f'{instance.name}_seed{seed}_nG{n_gen}.csv'
+        csv_file_name = f'{instance.name}_seed{seed}__pS{pop_size}_nG{n_gen}.csv'
         csv_file = os.path.join(result_dir, csv_file_name) 
         print(f'Write to file: {csv_file}')
         make_dirs_for_file(path=csv_file)
