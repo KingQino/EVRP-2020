@@ -24,6 +24,9 @@ def is_capacity_feasible(individual, capacity, demands):
         bool: True if the individual is feasible, False otherwise.
     """
     
+    if not individual:
+        return False
+
     # Iterate through each route in the individual
     for route in individual:
         # Calculate the total demand of the customers in the route

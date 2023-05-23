@@ -58,6 +58,55 @@ def generate_individual_randomly(num_vehicles, num_customers):
     return individual
 
 
+def generate_individual_randomly_wisely(num_vehicles, num_customers, capacity, demands):
+    """Generate an individual by randomly assigning customers to vehicles.
+    
+    Args:
+        num_vehicles: The number of vehicles.
+        num_customers: The number of customers.
+        capacity: The capacity of the vehicles.
+        demands: The dictionary containing the demands of each customer.
+        
+    Returns:
+        A list of lists, where each sublist represents a vehicle and its assigned customers.
+    """
+    
+    # Initialize an empty individual with a list for each vehicle
+    individual = [[] for _ in range(num_vehicles)]
+    
+    # Create a list of customers and shuffle it
+    customers = list(range(1, num_customers + 1))
+    random.shuffle(customers)
+    
+    start_time = time.process_time()
+    while customers:
+        customer = customers[0]
+        assigned = False
+        remaining_vehicles = list(range(num_vehicles))
+        
+        # Try to assign the customer to a random vehicle
+        while not assigned and remaining_vehicles:
+            vehicle = remaining_vehicles.pop()
+            total_demand = sum(demands[f'{_}'] for _ in individual[vehicle]) + demands[f'{customer}']
+            
+            # Check if the customer can be assigned to the current vehicle
+            if capacity >= total_demand:
+                individual[vehicle].append(customer)
+                assigned = True
+
+        if assigned:
+            # If the customer was assigned, remove them from the list of customers
+            customers.remove(customer)
+        else:
+            # If the customer was not assigned, shuffle the list of customers for the next attempt
+            random.shuffle(customers)
+        
+        if elapsed_time(start_time) > 1:
+            return []
+            # return generate_individual_randomly_wisely(num_vehicles, num_customers, capacity, demands)
+    
+    return individual
+
 
 # ************************************************************************
 # ***************************** Operators ********************************
