@@ -5,6 +5,7 @@ import random
 from csv import DictWriter
 
 from .utils import *  
+from .priority_queue import PriorityQueue
 
 
 
@@ -326,9 +327,9 @@ def station_realloc_1(individual, battery_capacity, energy_consumption, distance
             route_removed_stations = [node for node in real_route if str(node) not in station_list]
             reverse_route_removed_stations = route_removed_stations[::-1]
 
-            route_forward  = [0] + simple_repair(route_removed_stations[1:-1], battery_capacity, energy_consumption, distance_matrix, station_list) + [0]
+            route_forward  = real_route.copy()
             index_station_in_forward_route = next(i for i, node in enumerate(route_forward) if str(node) in station_list)
-            sublist_before_station_forward = route_forward[:index_station_in_forward_route] + [real_route[index_station_in_forward_route + 1]]
+            sublist_before_station_forward = route_forward[:index_station_in_forward_route] + [route_forward[index_station_in_forward_route + 1]]
 
             route_backward = [0] + simple_repair(reverse_route_removed_stations[1:-1], battery_capacity, energy_consumption, distance_matrix, station_list) + [0]
             contains_station = any(str(node) in station_list for node in route_backward)
@@ -373,6 +374,80 @@ def station_realloc_1(individual, battery_capacity, energy_consumption, distance
                         
         improved_individual.append(optimal_route)
         
+    
+    return improved_individual  
+
+
+def station_realloc_more(individual, battery_capacity, energy_consumption, distance_matrix, station_list):
+    '''
+    This function optimizes the route by relocating the position of the charging station in routes that contain 
+    more than one charging stations. It attempts to replace the stations to improve the overall performance of 
+    the route.
+    
+    Args:
+        individual: A list of routes. Each route is a list of nodes.
+        battery_capacity: The capacity of the battery.
+        energy_consumption: The energy consumption rate of the vehicle.
+        distance_matrix: A 2D list representing the distance between every two nodes.
+        station_list: A list of charging stations.
+        
+    Returns:
+        A list of optimized routes.
+    '''
+    
+    def is_energy_left_no_less_than_zero(route, battery_capacity, energy_consumption, distance_matrix, station_list):
+        # This helper function checks whether the energy left is no less than zero for a given route.
+        prev_node = 0
+        energy_left = battery_capacity
+        for current_node in route[1:]:
+            if current_node in station_list:
+                energy_left = battery_capacity
+            else:
+                energy_left -= energy_consumption * distance_matrix[prev_node][current_node]
+                if energy_left < 0:
+                    return False
+            prev_node = current_node
+        return True
+
+    station_list = [int(station) for station in station_list]
+
+    improved_individual = []
+    for route in individual:        
+        real_route = [0] + route + [0]
+        optimal_cost = sum(distance_matrix[real_route[i]][real_route[i + 1]] for i in range(len(real_route) - 1))
+        optimal_route = route
+
+        num_stations = sum(node in station_list for node in route)
+        if num_stations > 1:
+            route_removed_stations = [node for node in real_route if node not in station_list]
+            reverse_route_removed_stations = route_removed_stations[::-1]
+
+            route_forward = real_route.copy()
+            forward_station_indices = [i for i, x in enumerate(route_forward) if x in station_list]
+            for idx in forward_station_indices:
+                original_cost = distance_matrix[route_forward[idx-1]][route_forward[idx]] + distance_matrix[route_forward[idx]][route_forward[idx+1]]
+                for station in station_list:
+                    new_cost = distance_matrix[route_forward[idx-1]][station] + distance_matrix[station][route_forward[idx+1]]
+                    temp_route = route_forward[:idx] + [station] + route_forward[idx+1:]
+                    if new_cost < original_cost and is_energy_left_no_less_than_zero(temp_route, battery_capacity, energy_consumption, distance_matrix, station_list):
+                        optimal_cost = optimal_cost - original_cost + new_cost
+                        optimal_route = temp_route[1:-1]
+            
+            route_backward = [0] + simple_repair(reverse_route_removed_stations[1:-1], battery_capacity, energy_consumption, distance_matrix, station_list) + [0]
+            backward_station_indices = [i for i, x in enumerate(route_backward) if x in station_list]
+            if len(backward_station_indices) == 0:
+                improved_individual.append(route_backward[1:-1])
+                continue
+            for idx in backward_station_indices:
+                original_cost = distance_matrix[route_backward[idx-1]][route_backward[idx]] + distance_matrix[route_backward[idx]][route_backward[idx+1]]
+                for station in station_list:
+                    new_cost = distance_matrix[route_backward[idx-1]][station] + distance_matrix[station][route_backward[idx+1]]
+                    temp_route = route_backward[:idx] + [station] + route_backward[idx+1:]
+                    if new_cost < original_cost and is_energy_left_no_less_than_zero(temp_route, battery_capacity, energy_consumption, distance_matrix, station_list):
+                        optimal_cost = optimal_cost - original_cost + new_cost
+                        optimal_route = temp_route[1:-1]
+                        
+        improved_individual.append(optimal_route)
     
     return improved_individual  
 
@@ -433,14 +508,17 @@ def local_search(individual, instance):
 
     # station_realloc_1
     improved_individual = station_realloc_1(repaired_individual, battery_capacity, energy_consumption, distance_matrix, station_list)
-    cost = fitness_evaluation(improved_individual, distance_matrix)
+
+    # station_realloc_more
+    final_individual = station_realloc_more(improved_individual, battery_capacity, energy_consumption, distance_matrix, station_list) 
+    cost = fitness_evaluation(final_individual, distance_matrix)
     
-    return (improved_individual, cost)
+    return (final_individual, cost)
     
 def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir, is_export_csv=True):
     random.seed(seed)
     
-    CANDIDATES = []
+    CANDIDATES = PriorityQueue()
     PLAIN_CANDIDATES_SET = []
 
     num_vehicles =  instance.num_of_vehicles
@@ -487,15 +565,17 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
                     stats_num_candidates_added += 1
                     PLAIN_CANDIDATES_SET.append(individual)
                     optimized_individual, cost = local_search(individual, instance)
-                    CANDIDATES.append((optimized_individual, cost))
+                    CANDIDATES.push(optimized_individual, cost)
         print(f'  Evaluated {stats_num_candidates_added} individuals')
+        candidates_size = CANDIDATES.size()
+        print(f'  Candidates Pool Size: {candidates_size}')
+
         
-        CANDIDATES.sort(key=lambda x: x[1])
         # Elites Population
-        CANDIDATES = CANDIDATES[:1000]
+        elites = CANDIDATES.peek(1000)
 
         # Statistical Data
-        size = len(CANDIDATES)
+        size = len(elites)
         fits = []
         mean = 0
         std  = 0.0
@@ -505,7 +585,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         if size == 0:
             print('  No candidates')
         else:
-            fits = [fit for ind, fit in CANDIDATES]
+            fits = [fit for fit, idx, ind in elites]
             mean = sum(fits) / size
             min_fit = min(fits)
             max_fit = max(fits)
@@ -514,7 +594,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
             std = (sum((x - mean) ** 2 for x in fits) / (size - 1)) ** 0.5
         else:
             std = 0.0
-        print(f'  Candidates Num {size}')
+        print(f'  Elites Num {size}')
         print(f'  Min {min_fit}') # the best result of each generation
         print(f'  Max {max_fit}')
         print(f'  Avg {mean}')   # Reflect the direction of population evolution 
@@ -523,7 +603,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         min_individual = [] 
         min_fitness = None
         if size != 0:
-            min_individual, min_fitness = CANDIDATES[0]
+            min_fitness, idx, min_individual = CANDIDATES.peek(1)[0]
         print(f'  Best fitness: {min_fit}')
         best_solution = min_individual
         best_cost = min_fitness
@@ -532,6 +612,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
             csv_row = {
                 'generation': gen,
                 'evaluated_individuals': stats_num_candidates_added,
+                'candidates_size': candidates_size,
                 'min_fitness': min_fit,
                 'max_fitness': max_fit,
                 'avg_fitness': mean,
@@ -542,7 +623,8 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
     
         # select
         pop = []  
-        elites = [ind for ind, fit in CANDIDATES]
+        elites = [ind for fit, idx, ind in elites[:500]]
+        elites.extend(CANDIDATES.random_elements(1000))
         elites_without_stations = []
         for ind in elites:
             individual_without_station = []
@@ -581,6 +663,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
                 fieldnames = [
                     'generation',
                     'evaluated_individuals',
+                    'candidates_size',
                     'min_fitness',
                     'max_fitness',
                     'avg_fitness',
