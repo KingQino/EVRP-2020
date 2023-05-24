@@ -320,6 +320,20 @@ def simple_repair(initial_route, battery_capacity, energy_consumption, distance_
         else:
             # Find stations reachable from the current node
             reachable_stations_from_current = [int(station) for station in station_list if energy_left >= energy_consumption * distance_matrix[current_node][int(station)]]
+            if not reachable_stations_from_current:
+                # if there is no reachable stations from the current node, we would try insert station before the current
+                index = repaired_route.index(current_node)
+                prev_node = 0 if index == 0 else repaired_route[index - 1]
+                
+                prev_energy_left = energy_left + energy_consumption * distance_matrix[current_node][prev_node] 
+                reachable_stations_from_prev_node = [int(station) for station in station_list if prev_energy_left >= energy_consumption * distance_matrix[prev_node][int(station)]]
+                _nearest_station_to_current_node = find_nearest_station(current_node, distance_matrix, reachable_stations_from_prev_node)
+
+                # insert a station before the current node
+                repaired_route.insert(index, _nearest_station_to_current_node)
+                energy_left = battery_capacity - energy_consumption * distance_matrix[_nearest_station_to_current_node][current_node] 
+                
+                reachable_stations_from_current = [int(station) for station in station_list if energy_left >= energy_consumption * distance_matrix[current_node][int(station)]]
             nearest_station_to_next = find_nearest_station(next_node, distance_matrix, reachable_stations_from_current)
 
             repaired_route.append(nearest_station_to_next)
