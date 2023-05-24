@@ -13,7 +13,7 @@
             "args": [
                 "-n", "X-n351-k40.evrp",
                 "-g", "5",
-                "-ps", "10"
+                "-ps", "100"
             ],
             "justMyCode": true
         }

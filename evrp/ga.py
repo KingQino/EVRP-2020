@@ -582,7 +582,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
     random.seed(seed)
     
     CANDIDATES = PriorityQueue()
-    PLAIN_CANDIDATES_SET = []
+    PLAIN_CANDIDATES_SET = set()
 
     num_vehicles =  instance.num_of_vehicles
     num_customers = instance.dimension - 1
@@ -624,9 +624,10 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         pop_pool = pop + offspring_after_crossover + offspring_after_muatation
         for individual in pop_pool:
             if is_capacity_feasible(individual, capacity, demands):
-                if individual not in PLAIN_CANDIDATES_SET:
+                string_individual = '|'.join('-'.join(str(element) for element in sublist) for sublist in individual)
+                if string_individual not in PLAIN_CANDIDATES_SET:
                     stats_num_candidates_added += 1
-                    PLAIN_CANDIDATES_SET.append(individual)
+                    PLAIN_CANDIDATES_SET.add(string_individual)
                     optimized_individual, cost = local_search(individual, instance)
                     CANDIDATES.push(optimized_individual, cost)
         print(f'  Evaluated {stats_num_candidates_added} individuals')
