@@ -17,6 +17,7 @@ def run_large_instance(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb
     
     CANDIDATES = PriorityQueue()
     PLAIN_CANDIDATES_SET = set()
+    CANDIATES_POOL_SIZE = int(0.5 * pop_size)
 
     num_vehicles =  instance.num_of_vehicles
     num_customers = instance.dimension - 1
@@ -29,10 +30,9 @@ def run_large_instance(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb
     start_time = time.process_time()
     # population initialization
     pop = []
-    # init_pop_randomly = [generate_individual_randomly(num_vehicles, num_customers) for _ in range(int(pop_size * 0.8))]
     init_pop_randomly = [generate_individual_randomly_wisely(num_vehicles, num_customers, capacity, demands) for _ in range(int(pop_size * 0.9))]
     init_pop_randomly_wisely = [sublist for sublist in init_pop_randomly if sublist] 
-    init_pop_evenly = [generate_individual_evenly(num_vehicles, num_customers) for _ in range(int(pop_size * 0.2))]
+    init_pop_evenly = [generate_individual_evenly(num_vehicles, num_customers) for _ in range(int(pop_size * 0.1))]
     pop.extend(init_pop_randomly_wisely)
     pop.extend(init_pop_evenly)
     
@@ -68,11 +68,15 @@ def run_large_instance(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb
                     CANDIDATES.push(optimized_individual, cost)
         print(f'  Evaluated {stats_num_candidates_added} individuals')
         candidates_size = CANDIDATES.size()
+        if candidates_size > CANDIATES_POOL_SIZE:
+            CANDIDATES.remove_elements(candidates_size - CANDIATES_POOL_SIZE)
+            candidates_size = CANDIDATES.size()
+            print('  Clear extra candidates from Candiate Pool')
         print(f'  Candidates Pool Size: {candidates_size}')
 
         
         # Elites Population
-        elites = CANDIDATES.peek(1000)
+        elites = CANDIDATES.peek(CANDIATES_POOL_SIZE)
 
         # Statistical Data
         size = len(elites)
@@ -85,7 +89,7 @@ def run_large_instance(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb
         if size == 0:
             print('  No candidates')
         else:
-            fits = [fit for fit, idx, ind in elites]
+            fits = [fit for fit, ind in elites]
             mean = sum(fits) / size
             min_fit = min(fits)
             max_fit = max(fits)
@@ -103,7 +107,7 @@ def run_large_instance(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb
         min_individual = [] 
         min_fitness = None
         if size != 0:
-            min_fitness, idx, min_individual = CANDIDATES.peek(1)[0]
+            min_fitness, min_individual = CANDIDATES.peek(1)[0]
         print(f'  Best fitness: {min_fit}')
         best_solution = min_individual
         best_cost = min_fitness
@@ -122,9 +126,9 @@ def run_large_instance(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb
             csv_data.append(csv_row)
     
         # select
-        pop = []  
-        elites = [ind for fit, idx, ind in elites[:500]]
-        elites.extend(CANDIDATES.random_elements(1000))
+        pop = []
+        elites = [ind for fit, ind in elites[:int(0.2 * CANDIATES_POOL_SIZE)]]
+        elites.extend(CANDIDATES.random_elements(int(0.6 * CANDIATES_POOL_SIZE)))
         elites_without_stations = []
         for ind in elites:
             individual_without_station = []
@@ -140,7 +144,6 @@ def run_large_instance(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb
         
         individuals_from_immigration = []
         individuals_evenly = [generate_individual_evenly(num_vehicles, num_customers) for _ in range(int(num_left * 0.1))]
-        # individuals_randomly = [generate_individual_randomly(num_vehicles, num_customers) for _ in range(int(num_left * 0.2))]
         individuals_randomly = [generate_individual_randomly_wisely(num_vehicles, num_customers, capacity, demands) for _ in range(int(num_left * 0.2))]
         individuals_randomly_wisely = [sublist for sublist in individuals_randomly if sublist]  
         individuals_from_immigration.extend(individuals_evenly)
