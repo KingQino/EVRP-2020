@@ -583,6 +583,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
     
     CANDIDATES = PriorityQueue()
     PLAIN_CANDIDATES_SET = set()
+    CANDIATES_POOL_SIZE = int(0.5 * pop_size)
 
     num_vehicles =  instance.num_of_vehicles
     num_customers = instance.dimension - 1
@@ -632,6 +633,10 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
                     CANDIDATES.push(optimized_individual, cost)
         print(f'  Evaluated {stats_num_candidates_added} individuals')
         candidates_size = CANDIDATES.size()
+        if candidates_size > CANDIATES_POOL_SIZE:
+            CANDIDATES.remove_elements(candidates_size - CANDIATES_POOL_SIZE)
+            candidates_size = CANDIDATES.size()
+            print('  Clear extra candidates from Candiate Pool')
         print(f'  Candidates Pool Size: {candidates_size}')
 
         
@@ -649,7 +654,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         if size == 0:
             print('  No candidates')
         else:
-            fits = [fit for fit, idx, ind in elites]
+            fits = [fit for fit, ind in elites]
             mean = sum(fits) / size
             min_fit = min(fits)
             max_fit = max(fits)
@@ -667,7 +672,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
         min_individual = [] 
         min_fitness = None
         if size != 0:
-            min_fitness, idx, min_individual = CANDIDATES.peek(1)[0]
+            min_fitness, min_individual = CANDIDATES.peek(1)[0]
         print(f'  Best fitness: {min_fit}')
         best_solution = min_individual
         best_cost = min_fitness
@@ -687,7 +692,7 @@ def run_GA(instance, seed, pop_size, n_gen, cx_prob, mut_prob, indpb, result_dir
     
         # select
         pop = []  
-        elites = [ind for fit, idx, ind in elites[:500]]
+        elites = [ind for fit, ind in elites[:500]]
         elites.extend(CANDIDATES.random_elements(1000))
         elites_without_stations = []
         for ind in elites:

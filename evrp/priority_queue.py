@@ -7,14 +7,12 @@ import random
 class PriorityQueue:
     def __init__(self):
         self._queue = []
-        self._index = 0
 
     def is_empty(self):
         return not self._queue
 
     def push(self, item, priority):
-        heapq.heappush(self._queue, (priority, self._index, item))        
-        self._index += 1
+        heapq.heappush(self._queue, (priority, item))        
 
     def pop(self):
         if self.is_empty():
@@ -36,4 +34,21 @@ class PriorityQueue:
             num_elements = len(self._queue)
         random_indices = random.sample(range(len(self._queue)), num_elements)
         return [self._queue[i][-1] for i in random_indices]
+    
+    def remove_elements(self, num_removed_elements):
+        if self.is_empty():
+            return []
+        removed_elements = heapq.nlargest(num_removed_elements, self._queue)
+        
+        # Convert list of lists into tuple of tuples
+        a = [(priority, tuple(map(tuple, sublist))) for priority, sublist in self._queue]
+        b = [(priority, tuple(map(tuple, sublist))) for priority, sublist in removed_elements]
+
+        # Perform set difference operation
+        a = list(set(a) - set(b))
+
+        heapq.heapify(a)
+
+        # Convert tuples of tuples back into lists of lists
+        self._queue = [(priority, list(map(list, sublist))) for priority, sublist in a]
 
