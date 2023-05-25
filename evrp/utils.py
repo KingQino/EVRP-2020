@@ -219,7 +219,7 @@ def plot_route(route, df, ax, route_color='green', linewidth=1):
 
         ax.plot([x1, x2], [y1, y2], color=route_color, linewidth=linewidth)
 
-def visualize_routes(routes, df, title='Routes', is_save=False, save_path='./results/instance/routes.png'):
+def visualize_routes(routes, df, title='Routes', is_show=True, is_save=False, save_path='./results/instance/routes.png'):
     '''Visualizes all routes on a single plot.
 
     Args:
@@ -267,9 +267,10 @@ def visualize_routes(routes, df, title='Routes', is_save=False, save_path='./res
     if is_save:
         plt.savefig(save_path, bbox_inches='tight')
     
-    plt.show()
+    if is_show:
+        plt.show()
 
-def plot_training_graph(df, title, is_save=False, save_path='./results/instance/training.png'):
+def plot_training_graph(df, title, is_show=True, is_save=False, save_path='./results/instance/training.png'):
     """Plot a line graph for avg_fitness and min_fitness by generation using a DataFrame.
     It's used to visualize the training process.
     
@@ -304,7 +305,8 @@ def plot_training_graph(df, title, is_save=False, save_path='./results/instance/
         plt.savefig(save_path)
 
     # Display the graph
-    plt.show()
+    if is_show:
+        plt.show()
  
 
 
