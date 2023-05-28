@@ -169,6 +169,11 @@ def individual_2_route(individual, instance):
                 assigned = True
             else:
                 # Determine the reason for infeasibility and take appropriate action
+                if(prev_node == 0):
+                    nearest_station = find_nearest_station(node, DISTANCE_MATRIX, STATION_LIST)
+                    sub_route.append(nearest_station)
+                    prev_node = nearest_station
+                    continue
                 nearest_station = find_nearest_station(prev_node, DISTANCE_MATRIX, STATION_LIST)
                 updated_energy_left = BATTERY_CAPACITY - ENERGY_CONSUMPTION * DISTANCE_MATRIX[nearest_station][node]
 
@@ -657,6 +662,4 @@ def run_ga(instance_name, seed, pop_size, n_gen, rate_elite, cx_prob, mut_prob, 
                     writer.writerow(csv_row)
     
     return (best_ind, routes, best_ind.fitness.values[0], csv_file)        
-
-
 
