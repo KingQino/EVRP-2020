@@ -71,6 +71,8 @@ def generate_individual_randomly_wisely(num_vehicles, num_customers, capacity, d
         A list of lists, where each sublist represents a vehicle and its assigned customers.
     """
     
+    TIME_LIMIT = 3 if num_customers > 800 and num_customers < 1000 else 1
+    
     # Initialize an empty individual with a list for each vehicle
     individual = [[] for _ in range(num_vehicles)]
     
@@ -101,7 +103,7 @@ def generate_individual_randomly_wisely(num_vehicles, num_customers, capacity, d
             # If the customer was not assigned, shuffle the list of customers for the next attempt
             random.shuffle(customers)
         
-        if elapsed_time(start_time) > 1:
+        if elapsed_time(start_time) > TIME_LIMIT:
             return []
             # return generate_individual_randomly_wisely(num_vehicles, num_customers, capacity, demands)
     
