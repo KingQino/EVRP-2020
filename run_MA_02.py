@@ -6,12 +6,12 @@ import argparse
 
 from evrp.evrp_instance import EvrpInstance
 from evrp.utils import *
-from evrp.ma_01 import run_MA
+from evrp.ma_02 import run_MA
 
 
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname('.')))
 DATA_DIR = os.path.join(BASE_DIR, 'evrp-benchmark-set')
-RESULT_DIR = os.path.join(BASE_DIR, 'results/ma-01/')
+RESULT_DIR = os.path.join(BASE_DIR, 'results/ma-02/')
 
 def main():
     parser = argparse.ArgumentParser(description='argparse testing')
@@ -56,14 +56,14 @@ def main():
     print(best_solution)
 
     visualize(training_file)
-    visualize_routes(best_solution, df, 'MA wiht only simple-repair operator Best Solution for ' + instance.name, is_show=False, is_save=True, save_path=RESULT_DIR + instance.name.split('.')[0] + '-routes.png')
+    visualize_routes(best_solution, df, 'MA with simple local search operators Best Solution for ' + instance.name, is_show=False, is_save=True, save_path=RESULT_DIR + instance.name.split('.')[0] + '-routes.png')
 
 
 
 def visualize(training_file):
     df_run = pd.read_csv(training_file)
     instance_name = os.path.basename(training_file).split('_')[0].split('.')[0] 
-    title = instance_name + ' | MA with only simple-repair local search operator'
+    title = instance_name + ' | MA with simple local search operators'
     plot_training_graph(df_run, title, is_show=False, is_save=True, save_path=RESULT_DIR + instance_name + '-evolution.png')
 
 
